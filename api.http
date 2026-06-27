@@ -1,0 +1,75 @@
+### Coleção de requisições da API de Tabela Tarifária de Água
+### Compatível com a extensão "REST Client" (VS Code) e IntelliJ HTTP Client.
+### Base URL
+@host = http://localhost:8080
+
+### 1. Criar tabela tarifária completa (4 categorias + faixas)
+POST {{host}}/api/tabelas-tarifarias
+Content-Type: application/json
+
+{
+  "nome": "Tabela Tarifária 2026",
+  "dataVigencia": "2026-01-01",
+  "categorias": [
+    {
+      "categoria": "INDUSTRIAL",
+      "faixas": [
+        { "inicio": 0,  "fim": 10,    "valorUnitario": 1.00 },
+        { "inicio": 11, "fim": 20,    "valorUnitario": 2.00 },
+        { "inicio": 21, "fim": 30,    "valorUnitario": 3.00 },
+        { "inicio": 31, "fim": 99999, "valorUnitario": 4.00 }
+      ]
+    },
+    {
+      "categoria": "COMERCIAL",
+      "faixas": [
+        { "inicio": 0,  "fim": 10,    "valorUnitario": 1.50 },
+        { "inicio": 11, "fim": 20,    "valorUnitario": 2.50 },
+        { "inicio": 21, "fim": 30,    "valorUnitario": 3.50 },
+        { "inicio": 31, "fim": 99999, "valorUnitario": 4.50 }
+      ]
+    },
+    {
+      "categoria": "PARTICULAR",
+      "faixas": [
+        { "inicio": 0,  "fim": 10,    "valorUnitario": 0.80 },
+        { "inicio": 11, "fim": 20,    "valorUnitario": 1.60 },
+        { "inicio": 21, "fim": 30,    "valorUnitario": 2.40 },
+        { "inicio": 31, "fim": 99999, "valorUnitario": 3.20 }
+      ]
+    },
+    {
+      "categoria": "PUBLICO",
+      "faixas": [
+        { "inicio": 0,  "fim": 10,    "valorUnitario": 1.20 },
+        { "inicio": 11, "fim": 20,    "valorUnitario": 2.20 },
+        { "inicio": 21, "fim": 30,    "valorUnitario": 3.20 },
+        { "inicio": 31, "fim": 99999, "valorUnitario": 4.20 }
+      ]
+    }
+  ]
+}
+
+### 2. Listar todas as tabelas ativas
+GET {{host}}/api/tabelas-tarifarias
+
+### 3. Listar tabelas filtrando por categoria
+GET {{host}}/api/tabelas-tarifarias?categoria=INDUSTRIAL
+
+### 4. Calcular valor a pagar (caso do desafio: 18 m³ Industrial = R$ 26,00)
+POST {{host}}/api/calculos
+Content-Type: application/json
+
+{
+  "categoria": "INDUSTRIAL",
+  "consumo": 18
+}
+
+### 5. Excluir (logicamente) uma tabela tarifária
+DELETE {{host}}/api/tabelas-tarifarias/1
+
+### 6. Documentação interativa (Swagger UI)
+GET {{host}}/swagger-ui.html
+
+### 7. Health check
+GET {{host}}/actuator/health

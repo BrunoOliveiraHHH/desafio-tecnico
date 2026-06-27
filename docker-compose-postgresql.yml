@@ -1,0 +1,20 @@
+services:
+  postgres:
+    image: postgres:18
+    container_name: tarifa-agua-db
+    environment:
+      POSTGRES_DB: tarifa_agua
+      POSTGRES_USER: tarifa
+      POSTGRES_PASSWORD: tarifa
+    ports:
+      - "5432:5432"
+    volumes:
+      - tarifa_agua_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U tarifa -d tarifa_agua"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  tarifa_agua_data:
