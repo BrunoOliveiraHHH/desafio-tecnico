@@ -8,12 +8,18 @@ import org.springframework.data.repository.query.Param;
 
 import java.util.List;
 
+/**
+ * Repositório de {@link FaixaConsumo}.
+ */
 public interface FaixaConsumoRepository extends JpaRepository<FaixaConsumo, Long> {
 
     /**
-     * Retorna as faixas da categoria informada pertencentes a tabelas ATIVAS,
-     * priorizando a tabela vigente mais recente (maior data de vigencia / id).
-     * O servico de calculo usa as faixas da primeira tabela retornada.
+     * Retorna as faixas da categoria informada pertencentes a tabelas <strong>ativas</strong>,
+     * priorizando a tabela vigente mais recente (maior data de vigência / id). O
+     * serviço de cálculo utiliza as faixas da primeira tabela retornada.
+     *
+     * @param categoria categoria do consumidor
+     * @return faixas vigentes da categoria, ordenadas por vigência (desc) e início (asc)
      */
     @Query("""
             select f from FaixaConsumo f

@@ -2,6 +2,7 @@ package com.sinapsis.tarifaagua.controller;
 
 import com.sinapsis.tarifaagua.domain.Categoria;
 import com.sinapsis.tarifaagua.dto.TabelaResponse;
+import com.sinapsis.tarifaagua.exception.MensagemResolver;
 import com.sinapsis.tarifaagua.exception.RecursoNaoEncontradoException;
 import com.sinapsis.tarifaagua.service.TabelaService;
 import org.junit.jupiter.api.DisplayName;
@@ -33,6 +34,9 @@ class TabelaTarifariaControllerTest {
 
     @MockitoBean
     private TabelaService service;
+
+    @MockitoBean
+    private MensagemResolver mensagemResolver;
 
     @Test
     @DisplayName("POST valido retorna 201 com a tabela criada")

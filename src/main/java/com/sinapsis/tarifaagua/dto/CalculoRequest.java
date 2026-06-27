@@ -6,14 +6,21 @@ import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.PositiveOrZero;
 
 /**
- * Entrada do calculo: categoria + consumo total (m3).
+ * Dados de entrada do cálculo do valor a pagar.
+ *
+ * @param categoria categoria do consumidor
+ * @param consumo   consumo total em m³
  */
+@Schema(name = "CalculoRequest", description = "Entrada do cálculo: categoria e consumo")
 public record CalculoRequest(
 
         @Schema(description = "Categoria do consumidor", example = "INDUSTRIAL")
-        @NotNull Categoria categoria,
+        @NotNull(message = "{validacao.calculo.categoria}")
+        Categoria categoria,
 
-        @Schema(description = "Consumo total em m3", example = "18")
-        @NotNull @PositiveOrZero Integer consumo
+        @Schema(description = "Consumo total em m³", example = "18")
+        @NotNull(message = "{validacao.calculo.consumo}")
+        @PositiveOrZero(message = "{validacao.calculo.consumo}")
+        Integer consumo
 ) {
 }

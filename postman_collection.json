@@ -1,0 +1,66 @@
+{
+  "info": {
+    "name": "API Tabela Tarifária de Água",
+    "description": "Coleção de exemplos da API. Importe no Postman via Import > File. Alternativa: importar a especificação OpenAPI em {{host}}/v3/api-docs.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "host", "value": "http://localhost:8080" }
+  ],
+  "item": [
+    {
+      "name": "1. Criar tabela tarifária (4 categorias)",
+      "request": {
+        "method": "POST",
+        "header": [ { "key": "Content-Type", "value": "application/json" } ],
+        "url": { "raw": "{{host}}/api/tabelas-tarifarias", "host": [ "{{host}}" ], "path": [ "api", "tabelas-tarifarias" ] },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"nome\": \"Tabela Tarifária 2026\",\n  \"dataVigencia\": \"2026-01-01\",\n  \"categorias\": [\n    { \"categoria\": \"INDUSTRIAL\", \"faixas\": [\n      { \"inicio\": 0,  \"fim\": 10,    \"valorUnitario\": 1.00 },\n      { \"inicio\": 11, \"fim\": 20,    \"valorUnitario\": 2.00 },\n      { \"inicio\": 21, \"fim\": 30,    \"valorUnitario\": 3.00 },\n      { \"inicio\": 31, \"fim\": 99999, \"valorUnitario\": 4.00 }\n    ]},\n    { \"categoria\": \"COMERCIAL\", \"faixas\": [\n      { \"inicio\": 0,  \"fim\": 10,    \"valorUnitario\": 1.50 },\n      { \"inicio\": 11, \"fim\": 99999, \"valorUnitario\": 2.50 }\n    ]},\n    { \"categoria\": \"PARTICULAR\", \"faixas\": [\n      { \"inicio\": 0,  \"fim\": 10,    \"valorUnitario\": 0.80 },\n      { \"inicio\": 11, \"fim\": 99999, \"valorUnitario\": 1.60 }\n    ]},\n    { \"categoria\": \"PUBLICO\", \"faixas\": [\n      { \"inicio\": 0,  \"fim\": 10,    \"valorUnitario\": 1.20 },\n      { \"inicio\": 11, \"fim\": 99999, \"valorUnitario\": 2.20 }\n    ]}\n  ]\n}"
+        }
+      }
+    },
+    {
+      "name": "2. Listar tabelas ativas",
+      "request": {
+        "method": "GET",
+        "url": { "raw": "{{host}}/api/tabelas-tarifarias", "host": [ "{{host}}" ], "path": [ "api", "tabelas-tarifarias" ] }
+      }
+    },
+    {
+      "name": "3. Listar por categoria",
+      "request": {
+        "method": "GET",
+        "url": {
+          "raw": "{{host}}/api/tabelas-tarifarias?categoria=INDUSTRIAL",
+          "host": [ "{{host}}" ],
+          "path": [ "api", "tabelas-tarifarias" ],
+          "query": [ { "key": "categoria", "value": "INDUSTRIAL" } ]
+        }
+      }
+    },
+    {
+      "name": "4. Calcular (18 m³ Industrial = R$ 26,00)",
+      "request": {
+        "method": "POST",
+        "header": [ { "key": "Content-Type", "value": "application/json" } ],
+        "url": { "raw": "{{host}}/api/calculos", "host": [ "{{host}}" ], "path": [ "api", "calculos" ] },
+        "body": { "mode": "raw", "raw": "{\n  \"categoria\": \"INDUSTRIAL\",\n  \"consumo\": 18\n}" }
+      }
+    },
+    {
+      "name": "5. Excluir tabela (soft delete)",
+      "request": {
+        "method": "DELETE",
+        "url": { "raw": "{{host}}/api/tabelas-tarifarias/1", "host": [ "{{host}}" ], "path": [ "api", "tabelas-tarifarias", "1" ] }
+      }
+    },
+    {
+      "name": "6. Health check",
+      "request": {
+        "method": "GET",
+        "url": { "raw": "{{host}}/actuator/health", "host": [ "{{host}}" ], "path": [ "actuator", "health" ] }
+      }
+    }
+  ]
+}

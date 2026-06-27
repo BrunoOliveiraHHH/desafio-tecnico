@@ -8,6 +8,8 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
+import lombok.Getter;
+import lombok.Setter;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -15,12 +17,16 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Tabela tarifaria completa. Agrupa as faixas de consumo de todas as
- * categorias. A exclusao e logica (soft delete) atraves do campo {@code ativo},
- * de modo que tabelas excluidas nao sejam usadas em calculos futuros.
+ * Tabela tarifária completa. Agrupa as faixas de consumo de todas as categorias.
+ *
+ * <p>A exclusão é lógica (<em>soft delete</em>) através do campo {@code ativo},
+ * de modo que tabelas excluídas não sejam usadas em cálculos futuros, preservando
+ * o histórico.</p>
  */
 @Entity
 @Table(name = "tabela_tarifaria")
+@Getter
+@Setter
 public class TabelaTarifaria {
 
     @Id
@@ -42,56 +48,13 @@ public class TabelaTarifaria {
     @OneToMany(mappedBy = "tabela", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<FaixaConsumo> faixas = new ArrayList<>();
 
+    /**
+     * Adiciona uma faixa à tabela, mantendo o relacionamento bidirecional.
+     *
+     * @param faixa faixa a ser vinculada a esta tabela
+     */
     public void adicionarFaixa(FaixaConsumo faixa) {
         faixa.setTabela(this);
         this.faixas.add(faixa);
-    }
-
-    public Long getId() {
-        return id;
-    }
-
-    public void setId(Long id) {
-        this.id = id;
-    }
-
-    public String getNome() {
-        return nome;
-    }
-
-    public void setNome(String nome) {
-        this.nome = nome;
-    }
-
-    public LocalDate getDataVigencia() {
-        return dataVigencia;
-    }
-
-    public void setDataVigencia(LocalDate dataVigencia) {
-        this.dataVigencia = dataVigencia;
-    }
-
-    public boolean isAtivo() {
-        return ativo;
-    }
-
-    public void setAtivo(boolean ativo) {
-        this.ativo = ativo;
-    }
-
-    public LocalDateTime getCriadoEm() {
-        return criadoEm;
-    }
-
-    public void setCriadoEm(LocalDateTime criadoEm) {
-        this.criadoEm = criadoEm;
-    }
-
-    public List<FaixaConsumo> getFaixas() {
-        return faixas;
-    }
-
-    public void setFaixas(List<FaixaConsumo> faixas) {
-        this.faixas = faixas;
     }
 }

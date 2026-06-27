@@ -7,6 +7,7 @@ import com.sinapsis.tarifaagua.dto.CategoriaFaixasRequest;
 import com.sinapsis.tarifaagua.dto.CriarTabelaRequest;
 import com.sinapsis.tarifaagua.dto.FaixaRequest;
 import com.sinapsis.tarifaagua.dto.TabelaResponse;
+import com.sinapsis.tarifaagua.exception.MensagensErro;
 import com.sinapsis.tarifaagua.exception.RecursoNaoEncontradoException;
 import com.sinapsis.tarifaagua.exception.RegraNegocioException;
 import com.sinapsis.tarifaagua.repository.TabelaTarifariaRepository;
@@ -70,13 +71,27 @@ class TabelaServiceTest {
     }
 
     @Test
+    @DisplayName("Cria tabela sem data de vigencia (assume a data atual)")
+    void deveCriarSemDataVigencia() {
+        when(repository.save(any(TabelaTarifaria.class))).thenAnswer(inv -> inv.getArgument(0));
+
+        CriarTabelaRequest req = new CriarTabelaRequest("Sem data", null,
+                List.of(new CategoriaFaixasRequest(Categoria.INDUSTRIAL,
+                        List.of(faixa(0, 10, "1.00"), faixa(11, 20, "2.00")))));
+
+        service.criar(req);
+
+        verify(repository).save(any(TabelaTarifaria.class));
+    }
+
+    @Test
     @DisplayName("Rejeita faixas que nao iniciam em 0")
     void deveRejeitarSemInicioEmZero() {
         CriarTabelaRequest req = tabelaCom(List.of(faixa(1, 10, "1.00")));
 
         assertThatThrownBy(() -> service.criar(req))
                 .isInstanceOf(RegraNegocioException.class)
-                .hasMessageContaining("iniciar em 0");
+                .hasMessage(MensagensErro.FAIXA_COBERTURA_INICIAL);
         verify(repository, never()).save(any());
     }
 
@@ -87,7 +102,7 @@ class TabelaServiceTest {
 
         assertThatThrownBy(() -> service.criar(req))
                 .isInstanceOf(RegraNegocioException.class)
-                .hasMessageContaining("menor que fim");
+                .hasMessage(MensagensErro.FAIXA_ORDEM_INVALIDA);
         verify(repository, never()).save(any());
     }
 
@@ -100,7 +115,7 @@ class TabelaServiceTest {
 
         assertThatThrownBy(() -> service.criar(req))
                 .isInstanceOf(RegraNegocioException.class)
-                .hasMessageContaining("sobrepostas");
+                .hasMessage(MensagensErro.FAIXA_SOBREPOSICAO);
         verify(repository, never()).save(any());
     }
 
@@ -113,7 +128,7 @@ class TabelaServiceTest {
 
         assertThatThrownBy(() -> service.criar(req))
                 .isInstanceOf(RegraNegocioException.class)
-                .hasMessageContaining("Cobertura incompleta");
+                .hasMessage(MensagensErro.FAIXA_LACUNA);
         verify(repository, never()).save(any());
     }
 

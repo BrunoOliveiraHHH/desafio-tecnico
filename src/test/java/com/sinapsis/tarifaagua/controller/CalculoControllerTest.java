@@ -2,6 +2,7 @@ package com.sinapsis.tarifaagua.controller;
 
 import com.sinapsis.tarifaagua.domain.Categoria;
 import com.sinapsis.tarifaagua.dto.CalculoResponse;
+import com.sinapsis.tarifaagua.exception.MensagemResolver;
 import com.sinapsis.tarifaagua.service.CalculoService;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -29,6 +30,9 @@ class CalculoControllerTest {
 
     @MockitoBean
     private CalculoService service;
+
+    @MockitoBean
+    private MensagemResolver mensagemResolver;
 
     @Test
     @DisplayName("POST valido retorna 200 e o JSON no schema obrigatorio")

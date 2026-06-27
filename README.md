@@ -32,9 +32,11 @@ reflete imediatamente nos cálculos **sem alteração de código**.
 | Persistência | Spring Data JPA / Hibernate |
 | Banco de dados | PostgreSQL 18 |
 | Migrations | Flyway |
+| Boilerplate | Lombok (`@Getter`/`@Setter`, `@RequiredArgsConstructor`) |
 | Validação | Bean Validation (Jakarta) |
 | Documentação | springdoc-openapi (Swagger UI) |
-| Testes | JUnit 5, Mockito, AssertJ, MockMvc, Testcontainers |
+| Testes | JUnit 5, Mockito, AssertJ, MockMvc, H2 (memória), Cucumber (BDD) |
+| Cobertura | JaCoCo |
 | Build | Maven |
 
 ---
@@ -159,12 +161,20 @@ docker compose -f docker-compose-postgresql.yml up -d
 ## Como executar
 
 ```bash
-# 1. Subir o banco
+# 1. Subir o banco (via Docker) — ou use um PostgreSQL local já existente
 docker compose -f docker-compose-postgresql.yml up -d
 
 # 2. Executar a aplicação
 mvn spring-boot:run
 ```
+
+> **Banco local (sem Docker):** os valores padrão da aplicação são
+> `localhost:5432`, banco `tarifa_agua`, usuário/senha `tarifa`/`tarifa`. Basta
+> criar esse usuário e banco no seu PostgreSQL local (como superusuário):
+> ```sql
+> CREATE ROLE tarifa LOGIN PASSWORD 'tarifa';
+> CREATE DATABASE tarifa_agua OWNER tarifa;
+> ```
 
 A API ficará disponível em `http://localhost:8080`.
 
@@ -285,16 +295,23 @@ Formato padronizado para todos os erros:
   "timestamp": "2026-01-01T12:00:00Z",
   "status": 422,
   "erro": "Unprocessable Content",
-  "mensagem": "Faixas sobrepostas na categoria INDUSTRIAL entre [0-10] e [8-20]",
+  "mensagem": "As faixas da categoria INDUSTRIAL se sobrepõem entre os intervalos [0-10] e [8-20] m³.",
+  "caminho": "/api/tabelas-tarifarias",
   "detalhes": []
 }
 ```
 
+As mensagens são **amigáveis e parametrizáveis** (externalizadas em
+`messages.properties` / `ValidationMessages.properties`, com suporte a i18n).
+
 | Situação | Status |
 |----------|--------|
-| Payload/JSON inválido ou categoria inexistente | `400 Bad Request` |
-| Tabela não encontrada | `404 Not Found` |
-| Faixas inconsistentes / consumo fora da cobertura | `422 Unprocessable Entity` |
+| Payload/JSON inválido, categoria inexistente, parâmetro inválido | `400 Bad Request` |
+| Recurso/rota não encontrada | `404 Not Found` |
+| Método HTTP não suportado | `405 Method Not Allowed` |
+| Violação de integridade (constraint) | `409 Conflict` |
+| Faixas inconsistentes / consumo fora da cobertura | `422 Unprocessable Content` |
+| Erro inesperado | `500 Internal Server Error` |
 
 ---
 
@@ -313,32 +330,48 @@ O cálculo usa exclusivamente os valores do banco. Para comprovar:
 3. Calcule novamente `INDUSTRIAL` / `18` → **R$ 36,00** (10×2,00 + 8×2,00).
 
 Nenhuma linha de código foi alterada. Esse fluxo também é coberto
-automaticamente pelo teste de integração `TarifaAguaIT`.
+automaticamente pelo teste de aceite `CriteriosDeAceiteIT` e pelo cenário BDD
+(`parametrizacao.feature`).
 
 ---
 
 ## Como testar
 
+Todos os testes são **autocontidos** (não exigem Docker nem PostgreSQL):
+
 ```bash
-# Testes unitários (rápidos, sem dependências externas) — JUnit + Mockito + MockMvc
+# Testes unitários (JUnit + Mockito + MockMvc)
 mvn test
 
-# Suite completa, incluindo o teste de integração com PostgreSQL 18 real
-# (requer Docker em execução — usa Testcontainers)
+# Suíte completa: unitários + aceite (H2 em memória) + BDD (Cucumber) + cobertura
 mvn verify
 ```
 
-Cobertura de testes (JaCoCo) é gerada em `target/site/jacoco/index.html` após
-`mvn verify`.
+Cobertura de testes (**JaCoCo**) é gerada em `target/site/jacoco/index.html`
+após `mvn verify` (cobertura ~98% de instruções; código gerado pelo Lombok é
+ignorado). Se preferir, use `./mvnw` no lugar de `mvn`.
 
-**O que é testado:**
+**Camadas de teste:**
+
+- **Unitários (Mockito):** `CalculoService` e `TabelaService` (cálculo, limites,
+  validações de faixa, soft delete) com o repositório mockado; `ApiExceptionHandler`,
+  `MensagemResolver` e exceções de negócio.
+- **Web (`@WebMvcTest` + MockMvc):** contrato HTTP dos controllers (status/JSON).
+- **Aceite (`@SpringBootTest` + H2):** `CriteriosDeAceiteIT` — um teste por
+  critério do desafio, ponta a ponta, com rollback transacional.
+- **BDD (Cucumber):** vários `.feature` em português (Gherkin) com Background,
+  Esquema do Cenário (Exemplos) e tags:
+  `calculo_progressivo`, `criacao_tabela`, `listagem`, `exclusao_logica`,
+  `parametrizacao`. Passos divididos por contexto (`PassosTabela`,
+  `PassosCalculo`, `PassosComuns`) compartilhando estado via `@ScenarioScope`.
+
+**O que é coberto:**
 
 - Cálculo progressivo: caso canônico (18 m³ = R$ 26,00), limites de faixa,
   consumo zero, última faixa, categoria sem faixas e consumo fora da cobertura.
 - Validações de faixa: início em 0, ordem, sobreposição e lacunas.
-- Soft delete (não há remoção física).
-- Contrato HTTP dos endpoints (status e JSON) via MockMvc.
-- Fluxo ponta a ponta e parametrização via Testcontainers.
+- Soft delete (exclusão lógica, sem remoção física).
+- Parametrização ponta a ponta (alterar valor no banco muda o cálculo).
 
 ---
 
@@ -348,8 +381,21 @@ O schema é versionado pelo **Flyway**, em
 `src/main/resources/db/migration`:
 
 - `V1__create_schema.sql` — criação das tabelas, constraints e índices.
-- `V2__seed_dados_exemplo.sql` — dados de exemplo (seed) com as quatro
-  categorias, reproduzindo o caso do desafio.
+- `V2__seed_dados_exemplo.sql` — dados de exemplo (seed): uma tabela **ativa**
+  de 2026 (4 categorias × 5 faixas, reproduzindo o caso do desafio) e uma tabela
+  **histórica inativa** de 2025 (demonstra a preservação do histórico).
 
-As migrations são aplicadas automaticamente na inicialização da aplicação e
-durante os testes de integração.
+As migrations são aplicadas automaticamente na inicialização da aplicação.
+> Os testes usam **H2 em memória** (sem Flyway): o schema é gerado pelas
+> entidades JPA. Em produção, o `ddl-auto: validate` garante que as entidades
+> estão alinhadas ao schema versionado pelo Flyway.
+
+---
+
+## Coleção de exemplos (REST Client / Postman)
+
+- `api.http` — requisições prontas para a extensão **REST Client** (VS Code) e
+  o **HTTP Client** do IntelliJ.
+- `postman_collection.json` — importável diretamente no **Postman**
+  (`Import > File`). Alternativa: importar a especificação OpenAPI em
+  `/v3/api-docs`.

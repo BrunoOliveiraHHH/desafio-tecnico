@@ -5,6 +5,7 @@ import com.sinapsis.tarifaagua.domain.FaixaConsumo;
 import com.sinapsis.tarifaagua.domain.TabelaTarifaria;
 import com.sinapsis.tarifaagua.dto.CalculoRequest;
 import com.sinapsis.tarifaagua.dto.CalculoResponse;
+import com.sinapsis.tarifaagua.exception.MensagensErro;
 import com.sinapsis.tarifaagua.exception.RegraNegocioException;
 import com.sinapsis.tarifaagua.repository.FaixaConsumoRepository;
 import org.junit.jupiter.api.BeforeEach;
@@ -128,7 +129,7 @@ class CalculoServiceTest {
 
         assertThatThrownBy(() -> service.calcular(new CalculoRequest(Categoria.PUBLICO, 10)))
                 .isInstanceOf(RegraNegocioException.class)
-                .hasMessageContaining("PUBLICO");
+                .hasMessage(MensagensErro.CALCULO_SEM_TABELA_ATIVA);
     }
 
     @Test
@@ -139,6 +140,6 @@ class CalculoServiceTest {
 
         assertThatThrownBy(() -> service.calcular(new CalculoRequest(Categoria.INDUSTRIAL, 5000)))
                 .isInstanceOf(RegraNegocioException.class)
-                .hasMessageContaining("excede");
+                .hasMessage(MensagensErro.CALCULO_CONSUMO_FORA_COBERTURA);
     }
 }

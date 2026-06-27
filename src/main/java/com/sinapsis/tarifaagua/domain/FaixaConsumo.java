@@ -11,17 +11,23 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
+import lombok.Getter;
+import lombok.Setter;
 
 import java.math.BigDecimal;
 
 /**
  * Faixa progressiva de consumo, vinculada a uma {@link TabelaTarifaria} e a uma
- * {@link Categoria}. O valor unitario (R$/m3) e armazenado como BigDecimal.
- * Como tudo vive no banco, ajustar valores/faixas reflete automaticamente nos
- * calculos sem alteracao de codigo.
+ * {@link Categoria}.
+ *
+ * <p>O valor unitário (R$/m³) é armazenado como {@link BigDecimal}. Como tudo
+ * vive no banco, ajustar valores/faixas reflete automaticamente nos cálculos,
+ * sem alteração de código.</p>
  */
 @Entity
 @Table(name = "faixa_consumo")
+@Getter
+@Setter
 public class FaixaConsumo {
 
     @Id
@@ -44,52 +50,4 @@ public class FaixaConsumo {
 
     @Column(name = "valor_unitario", nullable = false, precision = 12, scale = 2)
     private BigDecimal valorUnitario;
-
-    public Long getId() {
-        return id;
-    }
-
-    public void setId(Long id) {
-        this.id = id;
-    }
-
-    public TabelaTarifaria getTabela() {
-        return tabela;
-    }
-
-    public void setTabela(TabelaTarifaria tabela) {
-        this.tabela = tabela;
-    }
-
-    public Categoria getCategoria() {
-        return categoria;
-    }
-
-    public void setCategoria(Categoria categoria) {
-        this.categoria = categoria;
-    }
-
-    public Integer getInicio() {
-        return inicio;
-    }
-
-    public void setInicio(Integer inicio) {
-        this.inicio = inicio;
-    }
-
-    public Integer getFim() {
-        return fim;
-    }
-
-    public void setFim(Integer fim) {
-        this.fim = fim;
-    }
-
-    public BigDecimal getValorUnitario() {
-        return valorUnitario;
-    }
-
-    public void setValorUnitario(BigDecimal valorUnitario) {
-        this.valorUnitario = valorUnitario;
-    }
 }
