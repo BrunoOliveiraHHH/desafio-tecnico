@@ -11,7 +11,7 @@
         <relativePath/>
     </parent>
 
-    <groupId>com.sinapsis</groupId>
+    <groupId>com.testetecnico</groupId>
     <artifactId>tarifa-agua</artifactId>
     <version>1.0.0</version>
     <name>tarifa-agua</name>

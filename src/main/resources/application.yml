@@ -39,4 +39,8 @@ management:
 
 logging:
   level:
+    com.testetecnico.tarifaagua: INFO
     org.hibernate.SQL: info
+  pattern:
+    # Inclui o requestId (correlação) em toda linha, facilitando a análise.
+    console: "%d{yyyy-MM-dd HH:mm:ss.SSS} %-5level [%X{requestId:-}] %logger{36} - %msg%n"

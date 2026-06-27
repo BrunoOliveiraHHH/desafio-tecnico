@@ -46,7 +46,7 @@ reflete imediatamente nos cálculos **sem alteração de código**.
 Organização em camadas, com separação clara de responsabilidades:
 
 ```
-com.sinapsis.tarifaagua
+com.testetecnico.tarifaagua
 ├── controller   → endpoints REST (recebe/retorna DTOs)
 ├── service      → regras de negócio (validação de faixas, cálculo progressivo)
 ├── repository   → acesso a dados (Spring Data JPA)
